@@ -11,6 +11,16 @@ router.get('/users', async (req, res) => {
     }
 })
 
+router.post('/users/login', async (req, res)=>{
+    try {
+        const user = await User.validateLogin(req.body.email, req.body.password)
+        await user.generateToken()
+        res.send(user)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
 router.get('/users/:id', async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
@@ -24,6 +34,7 @@ router.post('/users', async (req, res) => {
     const user = await new User(req.body)
     try {
         await user.save()
+        await user.generateToken()
         res.status(201).send(user)
     } catch (error) {
         res.status(400).send(error)

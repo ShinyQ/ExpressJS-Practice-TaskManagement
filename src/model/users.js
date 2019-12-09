@@ -1,9 +1,11 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 const userSchema = new mongoose.Schema({
     email: {
+        unique: true,
         type: String,
         required: true,
         trim: true,
@@ -44,7 +46,36 @@ const userSchema = new mongoose.Schema({
         type: String
     },
     date: { type: Date, default: Date.now },
+    tokens: [{
+        token: {
+            type: String,
+            required: true
+        }
+    }]
 })
+
+userSchema.statics.validateLogin = async (email, password) => {
+    const user = await User.findOne({email})
+    if (!user){
+        throw new Error('Email Tidak Ditemukan')
+    }
+
+    const matchPassword = await bcrypt.compare(password, user.password)
+    if (!matchPassword){
+        throw new Error('Password Salah')
+    }
+
+    return user
+}
+
+userSchema.methods.generateToken = async function () {
+    const user = this
+    const token = jwt.sign({_id: user._id.toString()}, 'taskmanageuserjwt')
+
+    user.tokens = user.tokens.concat({ token })
+    await user.save()
+    return token
+}
 
 userSchema.pre('save', async function(next){
     const user = this
