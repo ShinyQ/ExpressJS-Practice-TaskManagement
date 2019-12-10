@@ -1,5 +1,6 @@
 const express = require('express')
 const Task = require('../model/tasks')
+const Auth = require('../middleware/auth')
 const router = new express.Router()
 
 router.post('/tasks', async (req, res) => {
@@ -12,7 +13,7 @@ router.post('/tasks', async (req, res) => {
     }
 })
 
-router.get('/tasks', async (req, res) => {
+router.get('/tasks', Auth, async (req, res) => {
 
     try {
         const task = await Task.find({})
@@ -22,7 +23,7 @@ router.get('/tasks', async (req, res) => {
     }
 })
 
-router.get('/tasks/:id', async (req, res) => {
+router.get('/tasks/:id', Auth, async (req, res) => {
     try {
         const task = await Task.findById(req.params.id)
         res.send(task)
@@ -31,7 +32,7 @@ router.get('/tasks/:id', async (req, res) => {
     }
 })
 
-router.patch('/tasks/:id', async (req, res) => {
+router.patch('/tasks/:id', Auth, async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdates = ['description', 'completed']
     const validInput = updates.every((update) => allowedUpdates.includes(update))
@@ -54,7 +55,7 @@ router.patch('/tasks/:id', async (req, res) => {
     }
 })
 
-router.delete('/tasks/:id', async (req, res) => {
+router.delete('/tasks/:id', Auth, async (req, res) => {
     try {
         const task = await Task.findByIdAndRemove(req.params.id)
         if (!task) {
